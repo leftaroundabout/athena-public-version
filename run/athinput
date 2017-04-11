@@ -1,7 +1,7 @@
 <comment>
 problem   = spherical blast wave in spherical coordinates
 reference = Gardiner. T.A. & Stone, J.M., JCP, 205, 509 (2005) (for MHD version of test)
-configure = --prob=blast --coord=spherical_polar
+configure = --prob=blast --coord=spherical_polar -b
 
 <job>
 problem_id = Blast      # problem ID: basename of output filenames
@@ -48,3 +48,5 @@ radius        = 0.25          # Radius of the inner sphere
 x1_0          = 0.0           # r-coord of center of blast
 x2_0          = 1.0471975512  # theta-coord of center of blast (pi/3)
 x3_0          = 0.0           # phi-coord of center of blast
+b0         = 1.0
+angle      = 30
