@@ -745,3 +745,45 @@ void MeshBlock::SearchAndSetNeighbors(MeshBlockTree &tree, int *ranklist, int *n
 
   return;
 }
+
+
+
+
+void MeshBlock::SetField( FaceField& target
+                        , std::function<LocalVector(SpatialPosition)> f ) {
+  if (COORDINATE_SYSTEM == "cartesian") {
+    for (int k=ks; k<=ke; k++) {
+    for (int j=js; j<=je; j++) {
+    for (int i=is; i<=ie+1; i++) {
+      target.x1f(k,j,i) = f(SpatialPosition
+                              ( pcoord->x1v(i) - pcoord->GetEdge1Length(k,j,i)/2
+                              , pcoord->x2v(j)
+                              , pcoord->x3v(k) )
+                            ).x;
+    }}}
+    for (int k=ks; k<=ke; k++) {
+    for (int j=js; j<=je+1; j++) {
+    for (int i=is; i<=ie; i++) {
+      target.x2f(k,j,i) = f(SpatialPosition
+                              ( pcoord->x1v(i)
+                              , pcoord->x2v(j) - pcoord->GetEdge2Length(k,j,i)/2
+                              , pcoord->x3v(k) )
+                            ).y;
+    }}}
+    for (int k=ks; k<=ke+1; k++) {
+    for (int j=js; j<=je; j++) {
+    for (int i=is; i<=ie; i++) {
+      target.x3f(k,j,i) = f(SpatialPosition
+                              ( pcoord->x1v(i)
+                              , pcoord->x2v(j)
+                              , pcoord->x3v(k) - pcoord->GetEdge3Length(k,j,i)/2 )
+                            ).z;
+    }}}
+  } else {
+    std::stringstream msg;
+    msg << "### FATAL ERROR in function [MeshBlock::SetVectorField<FaceField>]" << std::endl
+        << "Setting of vector field only supported in cartesian coordinates."
+        <<std::endl;
+    throw std::runtime_error(msg.str().c_str());
+  }
+}

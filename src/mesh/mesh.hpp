@@ -13,6 +13,7 @@
 // C/C++ headers
 #include <stdint.h>  // int64_t
 #include <string>
+#include <functional>
 
 // Athena++ classes headers
 #include "../athena.hpp"
@@ -152,6 +153,8 @@ private:
   void AllocateIntUserMeshBlockDataField(int n);
   void AllocateUserOutputVariables(int n);
   void ProblemGenerator(ParameterInput *pin); // in ../pgen
+
+  void SetField(FaceField& target, std::function<LocalVector(SpatialPosition)> f);
 };
 
 //----------------------------------------------------------------------------------------

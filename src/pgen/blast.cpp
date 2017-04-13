@@ -15,6 +15,7 @@
 #include <sstream>
 #include <cmath>
 #include <stdexcept>
+#include <functional>
 
 // Athena++ headers
 #include "../athena.hpp"
@@ -122,21 +123,9 @@ void MeshBlock::ProblemGenerator(ParameterInput *pin)
 
   // initialize interface B and total energy
   if (MAGNETIC_FIELDS_ENABLED) {
-    for (int k=ks; k<=ke; k++) {
-    for (int j=js; j<=je; j++) {
-    for (int i=is; i<=ie+1; i++) {
-      pfield->b.x1f(k,j,i) = b0*cos(theta);
-    }}}
-    for (int k=ks; k<=ke; k++) {
-    for (int j=js; j<=je+1; j++) {
-    for (int i=is; i<=ie; i++) {
-      pfield->b.x2f(k,j,i) = b0*sin(theta);
-    }}}
-    for (int k=ks; k<=ke+1; k++) {
-    for (int j=js; j<=je; j++) {
-    for (int i=is; i<=ie; i++) {
-      pfield->b.x3f(k,j,i) = 0.0;
-    }}}
+    SetField(pfield->b, [&](SpatialPosition r) {
+        return LocalVector( b0*cos(theta), b0*sin(theta), 0 );
+      });
     for (int k=ks; k<=ke; k++) {
     for (int j=js; j<=je; j++) {
     for (int i=is; i<=ie+1; i++) {

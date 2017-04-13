@@ -38,6 +38,18 @@ typedef struct EdgeField {
   AthenaArray<Real> x1e,x2e,x3e;
 } EdgeField;
 
+
+// Simple 3D vector types. These are always considered in cartesian coordinates,
+// irrespective of the mesh coordinate system.
+struct SpatialPosition {
+  Real x, y, z;
+  SpatialPosition(Real x, Real y, Real z): x(x), y(y), z(z) {}
+};
+struct LocalVector {
+  Real x, y, z;
+  LocalVector(Real x, Real y, Real z): x(x), y(y), z(z) {}
+};
+
 //----------------------------------------------------------------------------------------
 // enums used everywhere
 
