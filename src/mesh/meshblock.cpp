@@ -779,10 +779,43 @@ void MeshBlock::SetField( FaceField& target
                               , pcoord->x3v(k) - pcoord->GetEdge3Length(k,j,i)/2 )
                             ).z;
     }}}
+  } else if (COORDINATE_SYSTEM == "spherical_polar") {
+    auto fsph = [f](Real r, Real theta, Real phi) {
+                  return f(SpatialPosition( r * std::sin(theta) * std::cos(phi)
+                                          , r * std::sin(theta) * std::sin(phi)
+                                          , r * std::cos(theta) ) );
+                };
+    for (int k=ks; k<=ke; k++) {
+    for (int j=js; j<=je; j++) {
+    for (int i=is; i<=ie+1; i++) {
+      Real r = pcoord->x1v(i) - pcoord->GetEdge1Length(k,j,i)/2
+         , theta = pcoord->x2v(j)
+         , phi = pcoord->x3v(k);
+      LocalVector v = fsph(r, theta, phi);
+      target.x1f(k,j,i) = abs(std::sin(theta)) * (std::cos(phi)*v.x + std::sin(phi)*v.y)
+                            + std::cos(theta) * v.z;
+    }}}
+    for (int k=ks; k<=ke; k++) {
+    for (int j=js; j<=je+1; j++) {
+    for (int i=is; i<=ie; i++) {
+      Real theta = pcoord->x2v(j) - pcoord->GetEdge2Length(k,j,i)/2
+         , phi = pcoord->x3v(k);
+      LocalVector v = fsph(pcoord->x1v(i), theta, phi);
+      target.x2f(k,j,i) = std::cos(theta) * (std::cos(phi)*v.x + std::sin(phi)*v.y)
+                            - abs(std::sin(theta)) * v.z;
+    }}}
+    for (int k=ks; k<=ke+1; k++) {
+    for (int j=js; j<=je; j++) {
+    for (int i=is; i<=ie; i++) {
+      Real theta = pcoord->x2v(j)
+         , phi = pcoord->x3v(k) - pcoord->GetEdge3Length(k,j,i)/2;
+      LocalVector v = fsph(pcoord->x1v(i), theta, phi);
+      target.x3f(k,j,i) = -std::sin(phi) * v.x + std::cos(phi) * v.y;
+    }}}
   } else {
     std::stringstream msg;
     msg << "### FATAL ERROR in function [MeshBlock::SetVectorField<FaceField>]" << std::endl
-        << "Setting of vector field only supported in cartesian coordinates."
+        << "Setting of vector field only supported in cartesian or spherical coordinates."
         <<std::endl;
     throw std::runtime_error(msg.str().c_str());
   }
