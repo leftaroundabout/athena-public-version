@@ -792,7 +792,7 @@ void MeshBlock::SetField( FaceField& target
          , theta = pcoord->x2v(j)
          , phi = pcoord->x3v(k);
       LocalVector v = fsph(r, theta, phi);
-      target.x1f(k,j,i) = abs(std::sin(theta)) * (std::cos(phi)*v.x + std::sin(phi)*v.y)
+      target.x1f(k,j,i) = std::abs(std::sin(theta)) * (std::cos(phi)*v.x + std::sin(phi)*v.y)
                             + std::cos(theta) * v.z;
     }}}
     for (int k=ks; k<=ke; k++) {
@@ -802,7 +802,7 @@ void MeshBlock::SetField( FaceField& target
          , phi = pcoord->x3v(k);
       LocalVector v = fsph(pcoord->x1v(i), theta, phi);
       target.x2f(k,j,i) = std::cos(theta) * (std::cos(phi)*v.x + std::sin(phi)*v.y)
-                            - abs(std::sin(theta)) * v.z;
+                            - std::abs(std::sin(theta)) * v.z;
     }}}
     for (int k=ks; k<=ke+1; k++) {
     for (int j=js; j<=je; j++) {
