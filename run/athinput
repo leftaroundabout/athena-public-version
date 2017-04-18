@@ -1,52 +1,49 @@
 <comment>
-problem   = spherical MHD blast wave
-reference = Gardiner. T.A. & Stone, J.M., JCP, 205, 509 (2005) (for MHD version of test)
-configure = --prob=blast -b
+problem   = shock cloud interaction
+reference = Shin,M.-S., Snyder, G., & Stone, J.M.
+configure = --prob=exp-atm_cloud
 
 <job>
-problem_id = Blast      # problem ID: basename of output filenames
+problem_id = Cloud      # problem ID: basename of output filenames
 
 <output1>
-file_type  = vtk        # VTK data dump
+file_type  = hst        # History data dump
+dt         = 0.01       # time increment between outputs
+
+<output2>
+file_type  = vtk        # Binary data dump
 variable   = prim       # variables to be output
-dt         = 0.1        # time increment between outputs
+dt         = 0.01       # time increment between outputs
 
 <time>
-cfl_number = 0.3        # The Courant, Friedrichs, & Lewy (CFL) Number
-nlim       = -1         # cycle limit
-tlim       = 0.4       # time limit
+cfl_number = 0.4        # The Courant, Friedrichs, & Lewy (CFL) Number
+nlim       = 100000     # cycle limit
+tlim       = 1.5        # time limit
 
 <mesh>
-nx1        = 64         # Number of zones in X1-direction
-x1min      = -1.0       # minimum value of X1
-x1max      =  1.0       # maximum value of X1
-ix1_bc     = periodic   # inner-X1 boundary flag
-ox1_bc     = periodic   # outer-X1 boundary flag
+nx1        = 160        # Number of zones in X1-direction
+x1min      = -3.0       # minimum value of X1
+x1max      = 7.0        # maximum value of X1
+ix1_bc     = user       # inner-X1 boundary flag
+ox1_bc     = outflow    # outer-X1 boundary flag
 
-nx2        = 64         # Number of zones in X2-direction
-x2min      = -1.0       # minimum value of X2
-x2max      =  1.0       # maximum value of X2
-ix2_bc     = periodic   # inner-X2 boundary flag
-ox2_bc     = periodic   # outer-X2 boundary flag
+nx2        = 80         # Number of zones in X2-direction
+x2min      = -2.5       # minimum value of X2
+x2max      = 2.5        # maximum value of X2
+ix2_bc     = outflow    # inner-X2 boundary flag
+ox2_bc     = outflow    # outer-X2 boundary flag
 
-nx3        = 64         # Number of zones in X3-direction
-x3min      = -1.0       # minimum value of X3
-x3max      =  1.0       # maximum value of X3
-ix3_bc     = periodic   # inner-X3 boundary flag
-ox3_bc     = periodic   # outer-X3 boundary flag
-
-num_threads = 1         # Number of OpenMP threads per process
+nx3        = 1          # Number of zones in X3-direction
+x3min      = -2.5       # minimum value of X3
+x3max      = 2.5        # maximum value of X3
+ix3_bc     = outflow    # inner-X3 boundary flag 
+ox3_bc     = outflow    # outer-X3 boundary flag
 
 <hydro>
-gamma           = 1.666666666667  # gamma = C_p/C_v
-iso_sound_speed = 1.0
+iso_sound_speed = 1.0 
+gamma      = 1.66667    # gamma = C_p/C_v
 
 <problem>
-pamb       = 0.1    # ambient pressure
-prat       = 100.   # Pressure ratio initially
-radius        = 0.25          # Radius of the inner sphere
-damb       = 1.0
-drat       = 1.0
-ramp       = 0.0
-b0         = 1.0
-angle      = 30
+Mach       = 10.0       # Mach number of shock
+drat       = 10         # density ratio of cloud
+beta       = 1.0        # plasma beta in upstream gas
