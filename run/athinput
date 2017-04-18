@@ -1,7 +1,7 @@
 <comment>
 problem   = shock cloud interaction
 reference = Shin,M.-S., Snyder, G., & Stone, J.M.
-configure = --prob=exp-atm_cloud
+configure = --prob=exp-atm_cloud -b
 
 <job>
 problem_id = Cloud      # problem ID: basename of output filenames
