@@ -16,7 +16,7 @@ variable   = prim       # variables to be output
 dt         = 0.1        # time increment between outputs
 
 <time>
-cfl_number = 0.4        # The Courant, Friedrichs, & Lewy (CFL) Number
+cfl_number = 0.3        # The Courant, Friedrichs, & Lewy (CFL) Number
 nlim       = 100000     # cycle limit
 tlim       = 1.5        # time limit
 
