@@ -97,9 +97,9 @@ void MeshBlock::ProblemGenerator(ParameterInput *pin)
 
   // initialize interface B, assuming longitudinal field only B=(1,0,0)
   if (MAGNETIC_FIELDS_ENABLED) {
-    Real bx = b0;
+    Real bx = 0.0;
     Real by = 0.0;
-    Real bz = 0.0;
+    Real bz = b0;
 
     for (int k=ks; k<=ke; k++) {
     for (int j=js; j<=je; j++) {
