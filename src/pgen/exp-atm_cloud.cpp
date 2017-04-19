@@ -3,14 +3,17 @@
 // Copyright(C) 2014 James M. Stone <jmstone@princeton.edu> and other code contributors
 // Licensed under the 3-clause BSD License, see LICENSE file for details
 //========================================================================================
-//! \file shk_cloud.c
-//  \brief Problem generator for shock-cloud problem
+//! \file exp-atm_cloud.c
+//  \brief Problem generator for problem of a plasma interacting with a
+//         static cloud of neutral gas
 //
 // The shock-cloud problem consists of a planar shock impacting a single spherical cloud
 // Input parameters are:
-//    - problem/Mach   = Mach number of incident shock
-//    - problem/drat   = density ratio of cloud to ambient
-//    - problem/beta   = ratio of Pgas/Pmag
+//    - problem/velo_ambient    = velocity outside of the cloud (in x-direction)
+//    - problem/density_plasma
+//    - problem/b0              = initial magnetic field (in z-direction)
+//    - problem/energy_intl     = internal energy density (without the magnetic component)
+//    - problem/radius_physical = unnormalised radius of the cloud.
 //
 // The cloud radius is fixed at 1.0.  The center of the coordinate system defines the
 // center of the cloud, and should be in the middle of the cloud. The shock is initially
@@ -36,8 +39,9 @@
 #include "../mesh/mesh.hpp"
 
 // postshock flow variables are shared with IIB function
-static Real gmma1,dl,pl,ul;
-static Real bxl,byl,bzl;
+static Real uamb, rho, b0, e0;
+
+static Real gmma1;
 
 // fixes BCs on L-x1 (left edge) of grid to postshock flow.
 void ShockCloudInnerX1(MeshBlock *pmb, Coordinates *pco, AthenaArray<Real> &prim,
@@ -68,106 +72,57 @@ void MeshBlock::ProblemGenerator(ParameterInput *pin)
   gmma1 = gmma - 1.0;
 
   // Read input parameters
-  Real xshock = -2.0;
-  Real rad    = 1.0;
-  Real mach = pin->GetReal("problem","Mach");
-  Real drat = pin->GetReal("problem","drat");
-  Real beta;
-  if (MAGNETIC_FIELDS_ENABLED) beta = pin->GetReal("problem","beta");
+  Real rad    = pin->GetReal("problem","radius");
+  uamb = pin->GetReal("problem","velo_ambient");
+  rho = pin->GetReal("problem","density_plasma");
+  e0 = pin->GetReal("problem","energy_intl");
+  if (MAGNETIC_FIELDS_ENABLED) b0 = pin->GetReal("problem","b0");
   
-  // Set paramters in ambient medium ("R-state" for shock)
-  Real dr = 1.0;
-  Real pr = 1.0/(peos->GetGamma());
-  Real ur = 0.0;
-
-  // Uses Rankine Hugoniot relations for adiabatic gas to initialize problem
-  Real jump1 = (gmma + 1.0)/(gmma1 + 2.0/(mach*mach));
-  Real jump2 = (2.0*gmma*mach*mach - gmma1)/(gmma + 1.0);
-  Real jump3 = 2.0*(1.0 - 1.0/(mach*mach))/(gmma + 1.0);
-
-  dl = dr*jump1;
-  pl = pr*jump2;
-  ul = ur + jump3*mach*sqrt(gmma*pr/dr);
-
   // Initialize the grid
   for (int k=ks; k<=ke; k++) {
   for (int j=js; j<=je; j++) {
   for (int i=is; i<=ie; i++) {
-    // postshock flow
-    if(pcoord->x1v(i) < xshock) {
-      phydro->u(IDN,k,j,i) = dl;
-      phydro->u(IM1,k,j,i) = ul*dl;
-      phydro->u(IM2,k,j,i) = 0.0;
-      phydro->u(IM3,k,j,i) = 0.0;
-      phydro->u(IEN,k,j,i) = pl/gmma1 + 0.5*dl*(ul*ul);
-
-    // preshock ambient gas
-    } else {
-      phydro->u(IDN,k,j,i) = dr;
-      phydro->u(IM1,k,j,i) = ur*dr;
-      phydro->u(IM2,k,j,i) = 0.0;
-      phydro->u(IM3,k,j,i) = 0.0;
-      phydro->u(IEN,k,j,i) = pr/gmma1 + 0.5*dr*(ur*ur);
-    }
+    phydro->u(IDN,k,j,i) = rho;
+    phydro->u(IM1,k,j,i) = uamb*rho;
+    phydro->u(IM2,k,j,i) = 0.0;
+    phydro->u(IM3,k,j,i) = 0.0;
+    phydro->u(IEN,k,j,i) = e0;
 
     // cloud interior
     Real diag = sqrt(SQR(pcoord->x1v(i)) + SQR(pcoord->x2v(j)) + SQR(pcoord->x3v(k)));
     if (diag < rad) {
-      phydro->u(IDN,k,j,i) = dr*drat;
-      phydro->u(IM1,k,j,i) = ur*dr*drat;
-      phydro->u(IM2,k,j,i) = 0.0;
-      phydro->u(IM3,k,j,i) = 0.0;
-      phydro->u(IEN,k,j,i) = pr/gmma1 + 0.5*dr*drat*(ur*ur);
+      phydro->u(IM1,k,j,i) = 0;
     }
   }}}
 
   // initialize interface B, assuming longitudinal field only B=(1,0,0)
   if (MAGNETIC_FIELDS_ENABLED) {
-    Real bxr = sqrt(2.0/beta);
-    Real byr = 0.0;
-    Real bzr = 0.0;
-    bxl = sqrt(2.0/beta);
-    byl = 0.0;
-    bzl = 0.0;
+    Real bx = b0;
+    Real by = 0.0;
+    Real bz = 0.0;
 
     for (int k=ks; k<=ke; k++) {
     for (int j=js; j<=je; j++) {
     for (int i=is; i<=ie+1; i++) {
-      if(pcoord->x1v(i) < xshock) {
-        pfield->b.x1f(k,j,i) = bxl;
-      } else {
-        pfield->b.x1f(k,j,i) = bxr;
-      }
+      pfield->b.x1f(k,j,i) = bx;
     }}}
     for (int k=ks; k<=ke; k++) {
     for (int j=js; j<=je+1; j++) {
     for (int i=is; i<=ie; i++) {
-      if(pcoord->x1v(i) < xshock) {
-        pfield->b.x2f(k,j,i) = byl;
-      } else {
-        pfield->b.x2f(k,j,i) = byr;
-      }
+      pfield->b.x2f(k,j,i) = by;
     }}}
     for (int k=ks; k<=ke+1; k++) {
     for (int j=js; j<=je; j++) {
     for (int i=is; i<=ie; i++) {
-      if(pcoord->x1v(i) < xshock) {
-        pfield->b.x3f(k,j,i) = bzl;
-      } else {
-        pfield->b.x3f(k,j,i) = bzr;
-      }
+      pfield->b.x3f(k,j,i) = bz;
     }}}
 
-    // initialize total energy
+    // add magnetic component to total energy
 
     for (int k=ks; k<=ke; k++) {
     for (int j=js; j<=je; j++) {
     for (int i=is; i<=ie; i++) {
-      if(pcoord->x1v(i) < xshock) {
-        phydro->u(IEN,k,j,i) += 0.5*(bxl*bxl + byl*byl + bzl*bzl);
-      } else {
-        phydro->u(IEN,k,j,i) += 0.5*(bxr*bxr + byr*byr + bxr*bzr);
-      }
+      phydro->u(IEN,k,j,i) += 0.5*(bx*bx + by*by + bz*bz);
     }}}
   }
   return;
@@ -184,11 +139,11 @@ void ShockCloudInnerX1(MeshBlock *pmb, Coordinates *pco, AthenaArray<Real> &prim
   for (int k=ks; k<=ke; ++k) {
   for (int j=js; j<=je; ++j) {
     for (int i=1; i<=(NGHOST); ++i) {
-      prim(IDN,k,j,is-i) = dl;
-      prim(IVX,k,j,is-i) = ul;
+      prim(IDN,k,j,is-i) = rho;
+      prim(IVX,k,j,is-i) = uamb;
       prim(IVY,k,j,is-i) = 0.0;
       prim(IVZ,k,j,is-i) = 0.0;
-      prim(IPR,k,j,is-i) = pl;
+      prim(IPR,k,j,is-i) = e0*gmma1;
     }
   }}
 }
