@@ -46,6 +46,6 @@ gamma      = 1.66667    # gamma = C_p/C_v
 <problem>
 velo_ambient   = 57000
 density_plasma = 7.023915e-17    # = 42300.0e6 * amu
-energy_inlt    = 4.973e-9
+energy_intl    = 4.973e-9
 b0             = -1.835e-6
 radius         = 1820.0e3
